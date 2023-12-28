@@ -1,7 +1,7 @@
 #dados conexao banco 
-user = 'se'
-host = '192.168.100.10/WINT'
-senha = 'wse01'
+user = 
+host = 
+senha = 
 vtotal = 0
 vtitulo = "Cancelar"
 vtitulo_qtable = "Mostrar"
