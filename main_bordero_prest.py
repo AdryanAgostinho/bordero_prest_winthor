@@ -42,6 +42,9 @@ class MyThread(QThread):
                     print(f"linha {x} para  o {vglobal.vtotal_para_processar}")
                     #if (int(index)) == int(vglobal.vtotal_para_processar):
                     #    break
+                    if int(vglobal.vtotal_para_processar) == int(contador_processo):
+                        vglobal.vprocessa_ativo_bordero = False
+                        break
                     time.sleep(0.1)
 
               time.sleep(0.1)
@@ -535,7 +538,6 @@ class Ui_MainWindow(object):
             self.popup.setText("Nenhuma prestação para montar bordero, importe 1 arquivo")
             self.popup.exec()
             return
-            
         self.numero_bordero()
         vglobal.vprocessa_ativo_bordero = True
         self.bt_montar.setVisible(False)
