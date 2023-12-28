@@ -10,3 +10,4 @@ imagens_dev_energy.zip
 *.ui
 *.cfg
 *.spec
+vglobal.py
