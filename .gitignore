@@ -1,0 +1,11 @@
+# created by virtualenv automatically
+**Scripts
+**Lib
+**dist
+**cx_Oracle-doc
+**build
+**__pycache__
+imagens_dev_energy.zip
+*.qrc
+*.ui
+*.cfg
