@@ -44,8 +44,8 @@ class MyThread(QThread):
                             sql = f"""
                             SELECT OBS2,min(PREST),numtransvenda,'ENCONTRADO' as status FROM PCPREST C 
         WHERE duplic = {Nf} 
-        AND VALOR <= {vl_parcela_att} + 0.10
-        AND VALOR >={vl_parcela_att} - 0.10
+        AND VALOR <= {vl_parcela_att} + 0.15
+        AND VALOR >={vl_parcela_att} - 0.15
         AND NSUTEF = {NSU} 
         AND CODCOB NOT IN ('DESD','CANC','DEVT','BNFT','ESTR')
         AND NVL(VPAGO,0) = 0
