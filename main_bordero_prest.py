@@ -609,12 +609,6 @@ class Ui_MainWindow(object):
             self.bt_montar.setVisible(True)
             self.progressBar.setVisible(False)
             self.progressBar.setProperty("value", 0)
-            vglobal.dados.clear()
-            vglobal.vtotal_achado = 0
-            self.popup = QMessageBox()
-            self.popup.setWindowTitle("Sucesso")
-            self.popup.setText("Bordero a receber montado com : " + str(vglobal.vtotal_para_processar)+ " títulos \nNúmero Bordero :" + str(vglobal.vnumbordero_prest) +"\n\n#Exporte os dados para válidar os títulos que foram adicionados ou não! ")
-            self.popup.exec()
             try:
                 con = bd.conexao.conectar()
                 cursor = con.cursor()
@@ -625,6 +619,11 @@ class Ui_MainWindow(object):
                     'json': str(vglobal.dados)
                 }
                 cursor.execute(sql,valores_insert)
+                
+                self.popup = QMessageBox()
+                self.popup.setWindowTitle("Sucesso")
+                self.popup.setText("Bordero a receber montado com : " + str(vglobal.vtotal_para_processar)+ " títulos \nNúmero Bordero :" + str(vglobal.vnumbordero_prest) +"\n\n#Exporte os dados para válidar os títulos que foram adicionados ou não! ")
+                self.popup.exec()
 
             except Exception as erro:
                 self.bt_montar.setVisible(True)
@@ -641,7 +640,8 @@ class Ui_MainWindow(object):
 
 
             vglobal.vtotal_para_processar = 0
-            
+            vglobal.dados.clear()
+            vglobal.vtotal_achado = 0
             
 # Mostrar uma mensagem de sucesso na tela
 
