@@ -43,7 +43,9 @@ class MyThread(QThread):
                     #if (int(index)) == int(vglobal.vtotal_para_processar):
                     #    break
                     if int(vglobal.vtotal_para_processar) == int(contador_processo):
+                        
                         vglobal.vprocessa_ativo_bordero = False
+                        print(str(vglobal.vprocessa_ativo_bordero))
                         break
                     time.sleep(0.1)
 
@@ -589,7 +591,7 @@ class Ui_MainWindow(object):
             self.popup.setWindowTitle("Cancelando Processo")
             self.popup.setText("1 erro foi encontrado " + str(E))
             self.popup.exec()
-        print(str(vglobal.vtotal_para_processar) + "total que tem que processar  e esse é o valor" + str(valor))
+        #print(str(vglobal.vtotal_para_processar) + "total que tem que processar  e esse é o valor" + str(valor))
         perc = ((int(valor))*100) / int(vglobal.vtotal_para_processar)
         self.progressBar.setProperty("value", (perc))
         if (perc) == 100:
