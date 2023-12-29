@@ -416,12 +416,21 @@ class Ui_MainWindow(object):
                          
             df_modelo = pd.DataFrame(dados)            
             # Criar um arquivo Excel com uma planilha chamada 'planilha1'
-            caminho_arquivo = 'modelo_importacao_bordero.xlsx'
+            title = 'Escolher caminho do Excel'
+            file_path = g.diropenbox(title)
+            caminho_arquivo = file_path+'\modelo_importacao_bordero.xlsx'
             with pd.ExcelWriter(caminho_arquivo, engine='openpyxl') as writer:
                 df_modelo.to_excel(writer, sheet_name='planilha', index=False)
-        df_exportar = pd.DataFrame(vglobal.dados)
-        caminho_arquivo_exportar = 'EXCEL_BORDERO_MONTADO.xlsx'
-        df_exportar.to_excel(caminho_arquivo_exportar, sheet_name='planilha1', index=False)
+        else:
+            title = 'Escolher caminho do Excel'
+            file_path = g.diropenbox(title)
+            df_exportar = pd.DataFrame(vglobal.dados)
+            caminho_arquivo_exportar = file_path+'\EXCEL_BORDERO_MONTADO.xlsx'
+            df_exportar.to_excel(caminho_arquivo_exportar, sheet_name='planilha1', index=False)
+        self.popup = QMessageBox()
+        self.popup.setWindowTitle("Sucesso")
+        self.popup.setText("arquivo exportado com sucesso")
+        self.popup.exec()
     def numero_bordero(self):
                   try:
                           con = bd.conexao.conectar()
@@ -533,6 +542,8 @@ class Ui_MainWindow(object):
         self.Form.show()
         file_path = self.LINE_CAMINHO_EXCEL.text()
         vglobal.vcaminho = file_path
+        vglobal.vexportar = "EXPORTAR"
+        self.bt_exportar_excel.setText(vglobal.vexportar)
     def montar_bordero_ativar(self):
         if vglobal.vtotal_para_processar == 0:
             self.popup = QMessageBox()
@@ -545,8 +556,7 @@ class Ui_MainWindow(object):
         self.bt_montar.setVisible(False)
         self.progressBar.setVisible(True)
         self.thread.start()
-        vglobal.vexportar = "EXPORTAR"
-        self.bt_exportar_excel.setText(vglobal.vexportar)
+        
         #self.bt_montar.setVisible(True)
         #self.progressBar.setVisible(False)
     def montar_bordero(self,valor,prest,numtrasnvenda):
@@ -599,6 +609,8 @@ class Ui_MainWindow(object):
             self.bt_montar.setVisible(True)
             self.progressBar.setVisible(False)
             self.progressBar.setProperty("value", 0)
+            vglobal.dados.clear()
+            vglobal.vtotal_achado = 0
             self.popup = QMessageBox()
             self.popup.setWindowTitle("Sucesso")
             self.popup.setText("Bordero a receber montado com : " + str(vglobal.vtotal_para_processar)+ " títulos \nNúmero Bordero :" + str(vglobal.vnumbordero_prest) +"\n\n#Exporte os dados para válidar os títulos que foram adicionados ou não! ")
