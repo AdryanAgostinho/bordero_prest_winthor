@@ -559,6 +559,35 @@ class Ui_MainWindow(object):
         
         #self.bt_montar.setVisible(True)
         #self.progressBar.setVisible(False)
+    def pop_upsucesso(self):
+        try:
+                con = bd.conexao.conectar()
+                cursor = con.cursor()
+                sql = " insert into ags_log (data,aplicacao,codigo,json) values(sysdate,:aplicacao,:codigo,:json)"
+                valores_insert ={
+                    'aplicacao': 'BORDERO_PREST',
+                    'codigo': int(vglobal.vnumbordero_prest),
+                    'json': str(vglobal.dados)
+                }
+                cursor.execute(sql,valores_insert)
+                
+                self.popup = QMessageBox()
+                self.popup.setWindowTitle("Sucesso")
+                self.popup.setText("Bordero a receber montado com : " + str(vglobal.vtotal_para_processar)+ " títulos \nNúmero Bordero :" + str(vglobal.vnumbordero_prest) +"\n\n#Exporte os dados para válidar os títulos que foram adicionados ou não! ")
+                self.popup.exec()
+
+        except Exception as erro:
+            self.bt_montar.setVisible(True)
+            self.progressBar.setVisible(False)
+            self.progressBar.setProperty("value", 0)
+            self.popup = QMessageBox()
+            self.popup.setWindowTitle("Erro")
+            self.popup.setText("Erro ao Salvar log : " + str(erro))
+            self.popup.exec()
+        finally:
+                con.commit()
+                cursor.close()
+                con.close()
     def montar_bordero(self,valor,prest,numtrasnvenda):
         vglobal.vprocessa_ativo_bordero = True
         try:
@@ -609,34 +638,8 @@ class Ui_MainWindow(object):
             self.bt_montar.setVisible(True)
             self.progressBar.setVisible(False)
             self.progressBar.setProperty("value", 0)
-            try:
-                con = bd.conexao.conectar()
-                cursor = con.cursor()
-                sql = " insert into ags_log (data,aplicacao,codigo,json) values(sysdate,:aplicacao,:codigo,:json)"
-                valores_insert ={
-                    'aplicacao': 'BORDERO_PREST',
-                    'codigo': int(vglobal.vnumbordero_prest),
-                    'json': str(vglobal.dados)
-                }
-                cursor.execute(sql,valores_insert)
-                
-                self.popup = QMessageBox()
-                self.popup.setWindowTitle("Sucesso")
-                self.popup.setText("Bordero a receber montado com : " + str(vglobal.vtotal_para_processar)+ " títulos \nNúmero Bordero :" + str(vglobal.vnumbordero_prest) +"\n\n#Exporte os dados para válidar os títulos que foram adicionados ou não! ")
-                self.popup.exec()
-
-            except Exception as erro:
-                self.bt_montar.setVisible(True)
-                self.progressBar.setVisible(False)
-                self.progressBar.setProperty("value", 0)
-                self.popup = QMessageBox()
-                self.popup.setWindowTitle("Erro")
-                self.popup.setText("Erro ao Salvar log : " + str(erro))
-                self.popup.exec()
-            finally:
-                con.commit()
-                cursor.close()
-                con.close()
+            time.sleep(2)
+            self.pop_upsucesso()
 
 
             vglobal.vtotal_para_processar = 0
