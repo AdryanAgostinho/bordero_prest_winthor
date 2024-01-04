@@ -40,18 +40,49 @@ class MyThread(QThread):
                     #print(f"{str(row['numtransvenda'])} vai entrar no bordero :=  {str(vglobal.vnumbordero_prest)}")
                     self.new_prest_signal.emit((contador_processo),str(row['prest']),str(row['numtransvenda']))
                     print(f"linha {x} para  o {vglobal.vtotal_para_processar}")
-                    #if (int(index)) == int(vglobal.vtotal_para_processar):
-                    #    break
+                    try:
+                       con = bd.conexao.conectar()
+                       cursor = con.cursor()
+                       sql = """
+                            update PCPREST
+        set
+          DTULTALTER = TRUNC(SYSDATE),
+          CODFUNCULTALTER = NVL(ags_func_log(),3),
+          TIPOPORTADOR = 'R',
+          CODPORTADOR = 1,
+          NUMBORDERO = :NUMBORDERO,
+          DTBORDERO = TRUNC(SYSDATE),
+          CODFUNCBORDERO = NVL(ags_func_log(),3)
+          where PREST = :prest
+          AND NUMTRANSVENDA = :numtransvenda
+                            """
+                       valores_update = {'prest': str(row['prest']),
+                                          'numtransvenda': int(row['numtransvenda']),
+                                          'NUMBORDERO': int(vglobal.vnumbordero_prest)
+                                          }
+                       #print((sql,valores_update))
+                       cursor.execute(sql,valores_update)
+                       con.commit()
+                    except Exception as E:
+                     self.popup = QMessageBox()
+                     self.popup.setWindowTitle("ERRO")
+                     self.popup.setText("ERRO : " + str(E))
+                     self.popup.exec()
+     
+                    finally:
+                        con.close()
+                        #if (int(index)) == int(vglobal.vtotal_para_processar):
+                        #    break
                     if int(vglobal.vtotal_para_processar) == int(contador_processo):
                         
                         vglobal.vprocessa_ativo_bordero = False
-                        print(str(vglobal.vprocessa_ativo_bordero))
+                        #print(str(vglobal.vprocessa_ativo_bordero))
                         break
-                    time.sleep(0.1)
+                    time.sleep(0.3)
 
-              time.sleep(0.1)
+              break
             
-            time.sleep(20)
+            break
 
 
 
@@ -544,6 +575,7 @@ class Ui_MainWindow(object):
         vglobal.vcaminho = file_path
         vglobal.vexportar = "EXPORTAR"
         self.bt_exportar_excel.setText(vglobal.vexportar)
+        vglobal.vcomecar_bordero = 0
     def montar_bordero_ativar(self):
         if vglobal.vtotal_para_processar == 0:
             self.popup = QMessageBox()
@@ -552,10 +584,13 @@ class Ui_MainWindow(object):
             self.popup.exec()
             return
         self.numero_bordero()
-        vglobal.vprocessa_ativo_bordero = True
-        self.bt_montar.setVisible(False)
-        self.progressBar.setVisible(True)
-        self.thread.start()
+        if vglobal.vcomecar_bordero == 0:
+            vglobal.vprocessa_ativo_bordero = True
+            self.bt_montar.setVisible(False)
+            self.progressBar.setVisible(True)
+            self.thread.start()
+            vglobal.vcomecar_bordero = 1
+
         
         #self.bt_montar.setVisible(True)
         #self.progressBar.setVisible(False)
@@ -591,49 +626,27 @@ class Ui_MainWindow(object):
     def montar_bordero(self,valor,prest,numtrasnvenda):
         vglobal.vprocessa_ativo_bordero = True
         try:
-               #print("prestação " + str(prest) + " numtransvenda " + str(numtrasnvenda))
-               try:
-                   con = bd.conexao.conectar()
-                   cursor = con.cursor()
-                   sql = """
-                        update PCPREST
-    set
-      DTULTALTER = TRUNC(SYSDATE),
-      CODFUNCULTALTER = NVL(ags_func_log(),3),
-      TIPOPORTADOR = 'R',
-      CODPORTADOR = 1,
-      NUMBORDERO = :NUMBORDERO,
-      DTBORDERO = TRUNC(SYSDATE),
-      CODFUNCBORDERO = NVL(ags_func_log(),3)
-      where PREST = :prest
-      AND NUMTRANSVENDA = :numtransvenda
-                        """
-                   valores_update = {'prest': str(prest),
-                                      'numtransvenda': int(numtrasnvenda),
-                                      'NUMBORDERO': int(vglobal.vnumbordero_prest)
-                                      }
-                   #print((sql,valores_update))
-                   cursor.execute(sql,valores_update)
-                   con.commit()
-               except Exception as E:
-                self.popup = QMessageBox()
-                self.popup.setWindowTitle("ERRO")
-                self.popup.setText("ERRO : " + str(E))
-                self.popup.exec()
-
-               finally:
-                   con.close()
+           perc = ((int(valor))*100) / int(vglobal.vtotal_para_processar)
+           MainWindow.setEnabled(False)
+           self.atualizar_perc(perc)
               
 
         except Exception as E:
+            MainWindow.setEnabled(True)
             self.popup = QMessageBox()
             self.popup.setWindowTitle("Cancelando Processo")
             self.popup.setText("1 erro foi encontrado " + str(E))
             self.popup.exec()
         #print(str(vglobal.vtotal_para_processar) + "total que tem que processar  e esse é o valor" + str(valor))
-        perc = ((int(valor))*100) / int(vglobal.vtotal_para_processar)
+        
+        
+            
+# Mostrar uma mensagem de sucesso na tela
+
+    def atualizar_perc(self,perc):
         self.progressBar.setProperty("value", (perc))
         if (perc) == 100:
+            MainWindow.setEnabled(True)
             vglobal.vprocessa_ativo_bordero = False
             self.bt_montar.setVisible(True)
             self.progressBar.setVisible(False)
@@ -645,10 +658,7 @@ class Ui_MainWindow(object):
             vglobal.vtotal_para_processar = 0
             vglobal.dados.clear()
             vglobal.vtotal_achado = 0
-            
-# Mostrar uma mensagem de sucesso na tela
 
-        
 import fundo
 import soui
 

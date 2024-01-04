@@ -46,14 +46,16 @@ class MyThread(QThread):
                            valores_prest = elemento_alvo['prest']
                            #print(valores_prest)
                        else:
-                           valores_prest = '0'
+                           valores_prest = "'ZZ'"
                     except:
-                        valores_prest = '0'
+                        valores_prest = "'ZZ'"
                     print(vglobal.dados_rodou)
+                    valores_prest = valores_prest.replace("''","'")
                     #print("valores prest" + valores_prest)
                     try:
                             con = bd.conexao.conectar()
                             cursor = con.cursor()
+                            valores_prest = valores_prest.replace("''","'")
                             sql = f"""
                             SELECT OBS2,min(PREST),numtransvenda,'ENCONTRADO' as status FROM PCPREST C 
         WHERE duplic = {Nf} 
@@ -68,7 +70,8 @@ AND PREST NOT IN ({valores_prest})
 AND DTBAIXA IS NULL
 group by OBS2,numtransvenda
                             """
-                            #print(sql)
+                            print(sql)
+                            print("###")
                             cursor.execute(sql)
                             
                             result = cursor.fetchall()
@@ -78,15 +81,32 @@ group by OBS2,numtransvenda
                                                      "prest" : str(result[0][1]),"Situacao": str(result[0][3])})
                                self.new_prest_signal.emit(str(Nf),str(NSU),str(result[0][2]),str(str(index+1)+"/"+str(tot)),tot,int(index+1),str(result[0][3]))
                                try:
+                                 resultado = ''
+                                 if len(result[0][1]) > 0:
+                                     resultado = result[0][1]
+                                 else:
+                                     resultado = 'ZZ'
                                  indice_alvo = next((index for (index, d) in enumerate(vglobal.dados_rodou) if d["nf"] == str(Nf)), None)
                                  if indice_alvo is not None:
-                                   prest_novo = vglobal.dados_rodou[indice_alvo]['prest'] + ',' + str(result[0][1])  # Novo valor para o campo 'prest'
-                                   vglobal.dados_rodou[indice_alvo]['prest'] = prest_novo
+                                   prest_novo = vglobal.dados_rodou[indice_alvo]['prest'] + ",'" + str(resultado) + "'"  # Novo valor para o campo 'prest'
+                                   print("ajuste de prest")
+                                   print(prest_novo)
+                                   vglobal.dados_rodou[indice_alvo]['prest'] =  prest_novo 
                                  else:
-                                   vglobal.dados_rodou.append({'nf': str(Nf), 'prest': str(result[0][1])})
+                                   resultado = ''
+                                   if len(result[0][1]) > 0:
+                                       resultado = result[0][1]
+                                   else:
+                                       resultado = 'ZZ'
+                                   vglobal.dados_rodou.append({'nf': str(Nf), 'prest': str( "'" + resultado + "'")})
                                       
                                except:
-                                 vglobal.dados_rodou.append({'nf': str(Nf), 'prest': str(result[0][1])})
+                                 resultado = ''
+                                 if result[0][1] == '':
+                                     resultado = result[0][1]
+                                 else:
+                                     resultado = 'ZZ'
+                                 vglobal.dados_rodou.append({'nf': str(Nf), 'prest': str(  "'" + resultado + "'")})
 
                             else: 
                                 vglobal.dados.append({"Nf": str(Nf),"vl_prest": vl_parcela_att,'nsu': NSU,"%": "100","bandeira" : BANDEIRA,
