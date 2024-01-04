@@ -550,6 +550,7 @@ class Ui_MainWindow(object):
         title = 'Escolher caminho do Excel'
         file_path = g.fileopenbox( title )
         vglobal.vcaminho = file_path
+        vglobal.dados.clear()
         try:
             file = open( file_path )
             self.LINE_CAMINHO_EXCEL.setText(file_path)
@@ -576,6 +577,7 @@ class Ui_MainWindow(object):
         vglobal.vexportar = "EXPORTAR"
         self.bt_exportar_excel.setText(vglobal.vexportar)
         vglobal.vcomecar_bordero = 0
+        vglobal.dados.clear()
     def montar_bordero_ativar(self):
         if vglobal.vtotal_para_processar == 0:
             self.popup = QMessageBox()
@@ -656,7 +658,6 @@ class Ui_MainWindow(object):
 
 
             vglobal.vtotal_para_processar = 0
-            vglobal.dados.clear()
             vglobal.vtotal_achado = 0
 
 import fundo
