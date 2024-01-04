@@ -25,7 +25,7 @@ class MyThread(QThread):
             try:
                file_path = vglobal.vcaminho
                if file_path:
-                print(file_path)
+                #print(file_path)
                 # Ler o arquivo Excel e obter os dados em um DataFrame
                 df = pd.read_excel(file_path,sheet_name='planilha',engine='openpyxl') 
                 tot = len(df)             
@@ -33,14 +33,29 @@ class MyThread(QThread):
                 for index, row in df.iterrows():
                     if vglobal.vprocessa_ativo == False:
                         break
+                    #if str(index) == '10':
+                    #            print('trava de teste')
+                    #            break
                     Nf = row['NF']
                     BANDEIRA = row['bandeira']
                     NSU = row['NSU/CV']
-                    print(NSU)
                     vl_parcela_att= row['valor bruto da parcela atualizada']
+                    try:
+                       elemento_alvo = next((d for d in vglobal.dados_rodou if d["nf"] == str(Nf)), None)  
+                       if elemento_alvo is not None:
+                           valores_prest = elemento_alvo['prest']
+                           #print(valores_prest)
+                       else:
+                           valores_prest = "'ZZ'"
+                    except:
+                        valores_prest = "'ZZ'"
+                    print(vglobal.dados_rodou)
+                    valores_prest = valores_prest.replace("''","'")
+                    #print("valores prest" + valores_prest)
                     try:
                             con = bd.conexao.conectar()
                             cursor = con.cursor()
+                            valores_prest = valores_prest.replace("''","'")
                             sql = f"""
                             SELECT OBS2,min(PREST),numtransvenda,'ENCONTRADO' as status FROM PCPREST C 
         WHERE duplic = {Nf} 
@@ -51,12 +66,12 @@ class MyThread(QThread):
         AND NVL(VPAGO,0) = 0
         AND EXISTS(SELECT 1 FROM PCCOB WHERE (NVL(PCCOB.CARTAO,'N') = 'S' OR PCCOB.CODCOB = 'CARC') AND PCCOB.CODCOB = C.CODCOB)
 AND NVL(NUMTRANS,0) = 0
+AND PREST NOT IN ({valores_prest})
 AND DTBAIXA IS NULL
 group by OBS2,numtransvenda
-
-        
                             """
                             print(sql)
+                            print("###")
                             cursor.execute(sql)
                             
                             result = cursor.fetchall()
@@ -65,13 +80,41 @@ group by OBS2,numtransvenda
                                                      "numtransvenda": str(result[0][2]),"Cliente" : str(result[0][0]),
                                                      "prest" : str(result[0][1]),"Situacao": str(result[0][3])})
                                self.new_prest_signal.emit(str(Nf),str(NSU),str(result[0][2]),str(str(index+1)+"/"+str(tot)),tot,int(index+1),str(result[0][3]))
+                               try:
+                                 resultado = ''
+                                 if len(result[0][1]) > 0:
+                                     resultado = result[0][1]
+                                 else:
+                                     resultado = 'ZZ'
+                                 indice_alvo = next((index for (index, d) in enumerate(vglobal.dados_rodou) if d["nf"] == str(Nf)), None)
+                                 if indice_alvo is not None:
+                                   prest_novo = vglobal.dados_rodou[indice_alvo]['prest'] + ",'" + str(resultado) + "'"  # Novo valor para o campo 'prest'
+                                   print("ajuste de prest")
+                                   print(prest_novo)
+                                   vglobal.dados_rodou[indice_alvo]['prest'] =  prest_novo 
+                                 else:
+                                   resultado = ''
+                                   if len(result[0][1]) > 0:
+                                       resultado = result[0][1]
+                                   else:
+                                       resultado = 'ZZ'
+                                   vglobal.dados_rodou.append({'nf': str(Nf), 'prest': str( "'" + resultado + "'")})
+                                      
+                               except:
+                                 resultado = ''
+                                 if result[0][1] == '':
+                                     resultado = result[0][1]
+                                 else:
+                                     resultado = 'ZZ'
+                                 vglobal.dados_rodou.append({'nf': str(Nf), 'prest': str(  "'" + resultado + "'")})
+
                             else: 
                                 vglobal.dados.append({"Nf": str(Nf),"vl_prest": vl_parcela_att,'nsu': NSU,"%": "100","bandeira" : BANDEIRA,
                                                      "numtransvenda": "000000","Cliente" : "Não encontrado",
                                                      "prest" : "0","Situacao": status})
                                 self.new_prest_signal.emit(str(Nf),str(NSU),"000000",str(str(index+1)+"/"+str(tot)),tot,int(index+1),status)
                             time.sleep(0.1)
-                
+                            
                     except Exception as e:
                         self.popup = QMessageBox()
                         self.popup.setWindowTitle("Cancelando Processo")
